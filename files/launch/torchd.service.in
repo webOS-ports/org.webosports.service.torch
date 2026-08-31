@@ -1,0 +1,15 @@
+[Unit]
+Description=LuneOS torch service
+# nyx.target, not just any ordering: the torch module needs the nyx modules in
+# place, and on a halium device the Android container has to be up too, since
+# the hybris backend talks to the camera service inside it.
+After=nyx.target
+Requires=nyx.target
+
+[Service]
+Type=simple
+ExecStart=@WEBOS_INSTALL_SBINDIR@/torchd
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

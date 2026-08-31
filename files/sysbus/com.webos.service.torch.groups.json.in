@@ -1,0 +1,4 @@
+{
+    "allowedNames": ["com.webos.service.torch"],
+    "torch.operation": ["dev"]
+}
