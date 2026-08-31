@@ -6,10 +6,25 @@ Description=LuneOS torch service
 After=nyx.target
 Requires=nyx.target
 
+# The registration made with the hub cannot outlive it, and nothing in the
+# process re-establishes one, so torchd has to be restarted whenever the hub is.
+# PartOf covers the deliberate case - systemctl restart ls-hubd takes torchd with
+# it - while the disconnect handler in main.c covers the hub crashing or being
+# stopped some other way. Both are needed: PartOf alone misses a crash, and the
+# handler alone leaves the ordering to chance on a restart.
+After=ls-hubd.service
+PartOf=ls-hubd.service
+
 [Service]
 Type=simple
 ExecStart=@WEBOS_INSTALL_SBINDIR@/torchd
-Restart=on-failure
+# always, not on-failure: the disconnect handler exits non-zero, but a clean
+# shutdown of the hub can end the main loop without one, and a torchd that
+# quietly stays down is exactly the failure this is meant to remove.
+Restart=always
+# Without a delay this spins if the hub is genuinely gone, and systemd's start
+# limit then gives up on torchd entirely - leaving it dead once the hub returns.
+RestartSec=2
 
 [Install]
 WantedBy=multi-user.target

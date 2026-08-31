@@ -1,7 +1,0 @@
-{
-    "torch.operation": [
-        "com.webos.service.torch/getStatus",
-        "com.webos.service.torch/set",
-        "com.webos.service.torch/toggle"
-    ]
-}

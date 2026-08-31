@@ -2,10 +2,10 @@
     "exeName": "@WEBOS_INSTALL_SBINDIR@/torchd",
     "trustLevel": "oem",
     "type": "regular",
-    "allowedNames": ["com.webos.service.torch", ""],
+    "allowedNames": ["org.webosports.service.torch", ""],
     "permissions": [
         {
-            "service": "com.webos.service.torch",
+            "service": "org.webosports.service.torch",
             "inbound": ["*"],
             "outbound": ["*"]
         }

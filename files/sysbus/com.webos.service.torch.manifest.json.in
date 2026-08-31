@@ -1,9 +1,0 @@
-{
-    "id": "com.webos.service.torch",
-    "version": "1.0.0",
-    "roleFiles": ["@WEBOS_INSTALL_WEBOS_SYSBUSDIR@/roles.d/com.webos.service.torch.role.json"],
-    "serviceFiles": ["@WEBOS_INSTALL_WEBOS_SYSBUSDIR@/services.d/com.webos.service.torch.service"],
-    "apiPermissionFiles": ["@WEBOS_INSTALL_WEBOS_SYSBUSDIR@/api-permissions.d/com.webos.service.torch.api.json"],
-    "clientPermissionFiles": ["@WEBOS_INSTALL_WEBOS_SYSBUSDIR@/client-permissions.d/com.webos.service.torch.perm.json"],
-    "groupsFiles": ["@WEBOS_INSTALL_WEBOS_SYSBUSDIR@/groups.d/com.webos.service.torch.groups.json"]
-}

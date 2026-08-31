@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.10)
-project(com.webos.service.torch C)
+project(org.webosports.service.torch C)
 
 include(webOS/webOS)
 webos_modules_init(1 0 0 QUALIFIER RC4)

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
- * torchd - com.webos.service.torch
+ * torchd - org.webosports.service.torch
  *
  * Puts the torch on the bus. Everything device-specific lives one layer down in
  * nyx: this opens NYX_DEVICE_LED "Torch" and neither knows nor cares whether
@@ -32,9 +32,11 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#define TORCH_SERVICE "com.webos.service.torch"
+#define TORCH_SERVICE "org.webosports.service.torch"
 
 static LSHandle *service_handle = NULL;
+static GMainLoop *main_loop = NULL;
+static int exit_status = 0;
 static nyx_device_handle_t torch_device = NULL;
 static bool nyx_attempted = false;
 
@@ -44,6 +46,36 @@ static bool nyx_attempted = false;
  * lets getStatus answer "available: false" instead of the service dying and
  * taking the answer with it.
  */
+/*
+ * The hub went away - restarted, or crashed.
+ *
+ * There is no reconnecting from here: the registration made by LSRegister() died
+ * with the old hub and nothing re-establishes it, so the process would stay alive
+ * answering nothing. That is worse than being dead, because everything downstream
+ * sees a service that exists and never replies - a getStatus that hangs rather
+ * than fails, and a menu that cannot tell "no torch" from "no answer".
+ *
+ * So exit non-zero and let systemd start a fresh process with a fresh
+ * registration. Quitting the main loop rather than calling exit() matters: it
+ * runs the cleanup below, which closes the nyx handle, and closing that switches
+ * the torch off - otherwise a hub restart could strand the light on with nothing
+ * left able to turn it off.
+ */
+static void hub_disconnected(LSHandle *sh, void *ctx)
+{
+	(void)sh;
+	(void)ctx;
+
+	g_warning("lost the luna-service2 hub; exiting so systemd restarts us with a "
+	          "fresh registration");
+	exit_status = 1;
+
+	if (main_loop)
+	{
+		g_main_loop_quit(main_loop);
+	}
+}
+
 static bool ensure_torch(void)
 {
 	nyx_error_t err;
@@ -266,6 +298,8 @@ int main(int argc, char **argv)
 	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
 	LSError lserror;
 
+	main_loop = loop;
+
 	LSErrorInit(&lserror);
 
 	if (!LSRegister(TORCH_SERVICE, &service_handle, &lserror))
@@ -278,6 +312,11 @@ int main(int argc, char **argv)
 		goto fail;
 	}
 
+	if (!LSSetDisconnectHandler(service_handle, hub_disconnected, NULL, &lserror))
+	{
+		goto fail;
+	}
+
 	if (!LSGmainAttach(service_handle, loop, &lserror))
 	{
 		goto fail;
@@ -286,7 +325,8 @@ int main(int argc, char **argv)
 	g_main_loop_run(loop);
 
 	/*
-	 * Only reached on an orderly shutdown. Closing the nyx handle matters:
+	 * Reached on an orderly shutdown, and on a hub disconnect. Closing the nyx
+	 * handle matters:
 	 * the hybris backend turns the torch off there, so a stop does not leave
 	 * the light on with nothing left able to switch it off.
 	 */
@@ -297,7 +337,7 @@ int main(int argc, char **argv)
 
 	LSUnregister(service_handle, &lserror);
 	g_main_loop_unref(loop);
-	return 0;
+	return exit_status;
 
 fail:
 	LSErrorPrint(&lserror, stderr);

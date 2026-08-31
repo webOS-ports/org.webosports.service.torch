@@ -1,0 +1,7 @@
+{
+    "torch.operation": [
+        "org.webosports.service.torch/getStatus",
+        "org.webosports.service.torch/set",
+        "org.webosports.service.torch/toggle"
+    ]
+}
