@@ -6,6 +6,15 @@ Description=LuneOS torch service
 After=nyx.target
 Requires=nyx.target
 
+# luneos-device-config writes /etc/nyx.conf (module.led torch_path) at boot and
+# bind-mounts it over the rootfs copy. torchd opens the nyx Torch device once at
+# startup, so it must run after that file is in place or it comes up bound to no
+# LED and reports the torch unavailable for the whole session. Wants, not
+# Requires: on a device without the generator torchd still starts and falls back
+# to nyx's own /sys/class/leds search.
+After=luneos-device-config.service
+Wants=luneos-device-config.service
+
 # The registration made with the hub cannot outlive it, and nothing in the
 # process re-establishes one, so torchd has to be restarted whenever the hub is.
 # PartOf covers the deliberate case - systemctl restart ls-hubd takes torchd with
